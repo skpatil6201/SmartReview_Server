@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm";
-import { User } from "../modules/users/user.entity.ts";
+import { Business } from "../modules/businesses/business.entity.ts";
+import { Product } from "../modules/products/product.entity.ts";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
   ssl: {
     rejectUnauthorized: false,
   },
-  entities: [User],
+  entities: [Business, Product],
   migrations: ["src/database/migrations/*.ts"],
   subscribers: [],
 });

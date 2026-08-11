@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import AuthService from "./service.ts";
+import BusinessesService from "../businesses/service.ts";
 
 export const root = (_req: Request, res: Response) => {
   res.json({ message: "auth module root" });
@@ -26,4 +27,24 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export default { root, signup, login };
+export const getUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = await BusinessesService.getBusinessById(id);
+    res.status(200).json(user);
+  } catch (error: any) {
+    const status = error.message === "Business not found" || error.message === "User not found" ? 404 : 500;
+    res.status(status).json({ message: error.message || "Error fetching user" });
+  }
+};
+
+export const getAllUsers = async (_req: Request, res: Response) => {
+  try {
+    const users = await BusinessesService.getAllBusinesses();
+    res.status(200).json(users);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || "Error fetching users" });
+  }
+};
+
+export default { root, signup, login, getUser };

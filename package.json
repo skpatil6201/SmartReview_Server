@@ -17,6 +17,7 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "exports": "./dist/index.js",
   "bugs": {
     "url": "https://github.com/skpatil6201/SmartReview_Server/issues"
   },

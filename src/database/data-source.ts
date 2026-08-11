@@ -10,6 +10,9 @@ export const AppDataSource = new DataSource({
   database: "review_data",
   synchronize: true,
   logging: false,
+  ssl: {
+    rejectUnauthorized: false,
+  },
   entities: [User],
   migrations: ["src/database/migrations/*.ts"],
   subscribers: [],

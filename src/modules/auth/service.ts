@@ -113,12 +113,17 @@ export class AuthService {
       throw new ServiceError("Invalid credentials.", 401);
     }
 
-    const payload = { id: business.id, email: business.email };
+    const payload = {
+      id: business.id,
+      email: business.email,
+      isAdmin: business.isAdmin,
+    };
     const token = jwt.sign(payload, env.jwtSecret, {
       expiresIn: "1h",
     });
 
-    return { token };
+    // Return the token and some user info for the client to use
+    return { token, user: { id: business.id, email: business.email, isAdmin: business.isAdmin } };
   }
 }
 

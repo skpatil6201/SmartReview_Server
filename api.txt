@@ -1,0 +1,195 @@
+ReviewManager Backend API
+=========================
+
+Server Port
+-----------
+PORT=8000
+Base URL: http://localhost:8000
+API Base URL: http://localhost:8000/api
+
+Notes
+-----
+- Send JSON requests with header:
+  Content-Type: application/json
+- Auth routes are mounted at /api/auth. The same auth router is also included inside /api, so use the /api/auth paths below.
+- Several modules currently expose only a root health/info endpoint.
+
+
+Root
+----
+
+GET /
+Description: Server root check.
+Response:
+{
+  "message": "Hello from Express on port 8000!"
+}
+
+
+Auth
+----
+
+GET /api/auth
+Description: Auth module root check.
+Response:
+{
+  "message": "auth module root"
+}
+
+POST /api/auth/signup
+Description: Register a business account.
+Request JSON:
+{
+  "businessName": "Tejas Cafe",
+  "phoneNumber": "9876543210",
+  "email": "owner@example.com",
+  "password": "Password123",
+  "confirmPassword": "Password123",
+  "address": "Pune, Maharashtra",
+  "industryType": "Restaurant",
+  "businessNumber": "GSTIN123456"
+}
+
+Success Response:
+{
+  "message": "Business registered successfully.",
+  "id": 1
+}
+
+POST /api/auth/login
+Description: Login with business email and password.
+Request JSON:
+{
+  "email": "owner@example.com",
+  "password": "Password123"
+}
+
+Success Response:
+{
+  "token": "jwt-token"
+}
+
+GET /api/auth/user/:id
+Description: Get one registered business/user by numeric id.
+Example:
+GET /api/auth/user/1
+
+GET /api/auth/users
+Description: Get all registered businesses/users.
+
+
+Users
+-----
+
+GET /api/users
+Description: Get all registered businesses/users.
+
+GET /api/users/:id
+Description: Get one registered business/user by numeric id.
+Example:
+GET /api/users/1
+
+
+Businesses
+----------
+
+GET /api/businesses
+Description: Businesses module root check.
+Response:
+{
+  "message": "businesses module root"
+}
+
+
+Products
+--------
+
+POST /api/products/post
+Description: Create a product.
+Request JSON:
+{
+  "name": "Premium Review Plan",
+  "description": "Monthly review management package",
+  "price": 999
+}
+
+Success Response:
+{
+  "id": "uuid",
+  "name": "Premium Review Plan",
+  "description": "Monthly review management package",
+  "price": 999,
+  "createdAt": "2026-08-12T00:00:00.000Z",
+  "updatedAt": "2026-08-12T00:00:00.000Z"
+}
+
+GET /api/products/:productId
+Description: Get product details by UUID.
+Example:
+GET /api/products/550e8400-e29b-41d4-a716-446655440000
+
+
+Google
+------
+
+GET /api/google
+Description: Google module root check.
+Response:
+{
+  "message": "google module root"
+}
+
+
+Reviews
+-------
+
+GET /api/reviews
+Description: Reviews module root check.
+Response:
+{
+  "message": "reviews module root"
+}
+
+
+AI
+--
+
+GET /api/ai
+Description: AI module root check.
+Response:
+{
+  "message": "ai module root"
+}
+
+
+Subscriptions
+-------------
+
+GET /api/subscriptions
+Description: Subscriptions module root check.
+Response:
+{
+  "message": "subscriptions module root"
+}
+
+
+Payments
+--------
+
+GET /api/payments
+Description: Payments module root check.
+Response:
+{
+  "message": "payments module root"
+}
+
+
+Notifications
+-------------
+
+GET /api/notifications
+Description: Notifications module root check.
+Response:
+{
+  "message": "notifications module root"
+}

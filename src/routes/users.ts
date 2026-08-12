@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { AppDataSource } from "../database/data-source.ts";
-import { User } from "../modules/users/user.entity.ts";
+import { Business } from "../modules/businesses/business.entity.ts";
 
 const router = Router();
-const userRepository = AppDataSource.getRepository(User);
+const businessRepository = AppDataSource.getRepository(Business);
 
 router.get("/", async (_req, res) => {
-  const users = await userRepository.find();
+  const users = await businessRepository.find();
   res.json(users);
 });
 

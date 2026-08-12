@@ -30,6 +30,10 @@ export const login = async (req: Request, res: Response) => {
 export const getUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    if (!id || Array.isArray(id)) {
+      return res.status(400).json({ message: "User id is required" });
+    }
+
     const user = await BusinessesService.getBusinessById(id);
     res.status(200).json(user);
   } catch (error: any) {

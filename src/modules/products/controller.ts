@@ -15,6 +15,10 @@ router.post('/post', async (req: Request, res: Response) => {
 export const getProductDetails = async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
+    if (!productId || Array.isArray(productId)) {
+      return res.status(400).json({ message: "Product id is required" });
+    }
+
     const details = await getProductDetailsService(productId);
 
     res.status(200).json(details);

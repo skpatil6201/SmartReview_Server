@@ -1,4 +1,7 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
+import { env } from "../../config/env.ts";
 import { AppDataSource } from "../../database/data-source.ts";
 import { Business } from "../businesses/business.entity.ts";
 
@@ -15,6 +18,30 @@ export class AuthService {
 
   private hashPassword(password: string, salt: string) {
     return scryptSync(password, salt, 64).toString("hex");
+  }
+
+  private async sendWelcomeEmail(email: string, businessName: string) {
+    if (!env.email.host || !env.email.port || !env.email.user || !env.email.pass) {
+      console.warn("Email configuration is incomplete. Skipping welcome email.");
+      return;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: env.email.host,
+      port: env.email.port,
+      secure: env.email.secure,
+      auth: {
+        user: env.email.user,
+        pass: env.email.pass,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"ReviewManager" <${env.email.user}>`,
+      to: email,
+      subject: "Welcome to ReviewManager!",
+      html: `<b>Hello ${businessName},</b><br><p>Thank you for registering with ReviewManager. We're excited to have you on board!</p>`,
+    });
   }
 
   async signup(payload: any) {
@@ -58,6 +85,13 @@ export class AuthService {
 
     await this.businessRepository.save(business);
 
+    try {
+      await this.sendWelcomeEmail(business.email, business.businessName);
+    } catch (error) {
+      // Log the email error but don't block the user registration
+      console.error("Failed to send welcome email:", error);
+    }
+
     return { message: "Business registered successfully.", id: business.id };
   }
 
@@ -79,7 +113,12 @@ export class AuthService {
       throw new ServiceError("Invalid credentials.", 401);
     }
 
-    return { businessId: business.id, businessName: business.businessName };
+    const payload = { id: business.id, email: business.email };
+    const token = jwt.sign(payload, env.jwtSecret, {
+      expiresIn: "1h",
+    });
+
+    return { token };
   }
 }
 

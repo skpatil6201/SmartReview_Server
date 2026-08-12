@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { AppDataSource } from "../database/data-source.js";
-import { User } from "../modules/users/user.entity.js";
+import { Business } from "../modules/businesses/business.entity.js";
 const router = Router();
-const userRepository = AppDataSource.getRepository(User);
+const businessRepository = AppDataSource.getRepository(Business);
 router.get("/", async (_req, res) => {
-    const users = await userRepository.find();
+    const users = await businessRepository.find();
     res.json(users);
 });
 export default router;

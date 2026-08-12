@@ -1,6 +1,24 @@
 import { Router } from "express";
-import usersRouter from "./users.js";
+import authRouter from "../modules/auth/index.js";
+import usersRouter from "../modules/users/index.js";
+import businessesRouter from "../modules/businesses/index.js";
+import googleRouter from "../modules/google/index.js";
+import reviewsRouter from "../modules/reviews/index.js";
+import aiRouter from "../modules/ai/index.js";
+import subscriptionsRouter from "../modules/subscriptions/index.js";
+import paymentsRouter from "../modules/payments/index.js";
+import notificationsRouter from "../modules/notifications/index.js";
+import productsRouter from "../modules/products/index.js";
 const router = Router();
+router.use("/auth", authRouter);
 router.use("/users", usersRouter);
+router.use("/businesses", businessesRouter);
+router.use("/google", googleRouter);
+router.use("/reviews", reviewsRouter);
+router.use("/ai", aiRouter);
+router.use("/subscriptions", subscriptionsRouter);
+router.use("/payments", paymentsRouter);
+router.use("/notifications", notificationsRouter);
+router.use("/products", productsRouter);
 export default router;
 //# sourceMappingURL=index.js.map

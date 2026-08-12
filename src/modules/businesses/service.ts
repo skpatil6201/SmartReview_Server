@@ -3,7 +3,13 @@ import { Business } from "./business.entity.ts";
 
 export const getBusinessById = async (id: string) => {
   const repo = AppDataSource.getRepository(Business);
-  const business = await repo.findOneBy({ id });
+  const businessId = Number(id);
+
+  if (Number.isNaN(businessId)) {
+    throw new Error("Invalid business id");
+  }
+
+  const business = await repo.findOneBy({ id: businessId });
   if (!business) throw new Error("Business not found");
   return business;
 };

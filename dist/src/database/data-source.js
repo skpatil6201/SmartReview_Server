@@ -1,11 +1,18 @@
 import { DataSource } from "typeorm";
-import { User } from "../modules/users/user.entity.js";
+import { env } from "../config/env.js";
+import { Business } from "../modules/businesses/business.entity.js";
+import { Product } from "../modules/products/product.entity.js";
 export const AppDataSource = new DataSource({
-    type: "sqlite",
-    database: "./database/sqlite.db",
+    type: "postgres",
+    host: env.db.host,
+    port: env.db.port,
+    username: env.db.username,
+    password: env.db.password,
+    database: env.db.database,
     synchronize: true,
     logging: false,
-    entities: [User],
+    ssl: env.db.ssl ? { rejectUnauthorized: false } : false,
+    entities: [Business, Product],
     migrations: ["src/database/migrations/*.ts"],
     subscribers: [],
 });

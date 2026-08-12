@@ -1,18 +1,19 @@
 import "reflect-metadata";
 import express from "express";
+import { env } from "./src/config/env.ts";
 import { AppDataSource } from "./src/database/data-source.ts";
 import authRoutes from "./src/routes/auth.ts";
 import router from "./src/routes/index.ts";
 
 const app = express();
-const port = 8000;
+const port = env.port;
 
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api", router);
 
 app.get("/", (_req, res) => {
-  res.send("Hello from Express on port 8000!");
+  res.send(`Hello from Express on port ${port}!`);
 });
 
 AppDataSource.initialize()

@@ -32,6 +32,11 @@ export class Business {
   @CreateDateColumn()
   createdAt!: Date;
 
+  @Column({ default: false })
+  isAdmin!: boolean;
+
+  
+
   @UpdateDateColumn()
   updatedAt!: Date;
 }

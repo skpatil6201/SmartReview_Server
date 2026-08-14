@@ -1,3 +1,9 @@
-import controller from "./controller.ts";
+import { Router } from "express";
+import { generateResponse, root } from "./controller.ts";
 
-export default controller;
+const router = Router();
+
+router.get("/", root);
+router.post("/generate-response", generateResponse);
+
+export default router;

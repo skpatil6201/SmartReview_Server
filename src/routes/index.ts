@@ -9,6 +9,7 @@ import subscriptionsRouter from "../modules/subscriptions/index.ts";
 import paymentsRouter from "../modules/payments/index.ts";
 import notificationsRouter from "../modules/notifications/index.ts";
 import productsRouter from "../modules/products/index.ts";
+import supportRouter from "../modules/support/index.ts";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/subscriptions", subscriptionsRouter);
 router.use("/payments", paymentsRouter);
 router.use("/notifications", notificationsRouter);
 router.use("/products", productsRouter);
+router.use("/support", supportRouter);
 
 export default router;

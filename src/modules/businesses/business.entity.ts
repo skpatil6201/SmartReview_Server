@@ -29,6 +29,12 @@ export class Business {
   @Column({ unique: true })
   businessNumber!: string;
 
+  @Column({ type: "varchar", nullable: true })
+  googlePlaceId!: string | null;
+
+  @Column({ type: "int", nullable: true })
+  subscriptionId!: number | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

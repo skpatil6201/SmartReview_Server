@@ -9,6 +9,7 @@ import subscriptionsRouter from "../modules/subscriptions/index.js";
 import paymentsRouter from "../modules/payments/index.js";
 import notificationsRouter from "../modules/notifications/index.js";
 import productsRouter from "../modules/products/index.js";
+import supportRouter from "../modules/support/index.js";
 const router = Router();
 router.use("/auth", authRouter);
 router.use("/users", usersRouter);
@@ -20,5 +21,6 @@ router.use("/subscriptions", subscriptionsRouter);
 router.use("/payments", paymentsRouter);
 router.use("/notifications", notificationsRouter);
 router.use("/products", productsRouter);
+router.use("/support", supportRouter);
 export default router;
 //# sourceMappingURL=index.js.map

@@ -12,6 +12,8 @@ type AppEnv = {
     ssl: boolean;
   };
   jwtSecret: string;
+  geminiApiKey: string | undefined;
+  googlePlacesApiKey: string | undefined;
   email: {
     host: string | undefined;
     port: number | undefined;
@@ -61,6 +63,11 @@ const booleanFromEnv = (key: string, fallback: boolean) => {
   return ["1", "true", "yes"].includes(value.toLowerCase());
 };
 
+const optionalFromEnv = (key: string) => {
+  const value = process.env[key]?.trim();
+  return value && !/^your_/.test(value) ? value : undefined;
+};
+
 export const env: AppEnv = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: numberFromEnv("PORT", 8000),
@@ -73,6 +80,8 @@ export const env: AppEnv = {
     ssl: booleanFromEnv("DB_SSL", true),
   },
   jwtSecret: required("JWT_SECRET"),
+  geminiApiKey: optionalFromEnv("GEMINI_API_KEY"),
+  googlePlacesApiKey: optionalFromEnv("GOOGLE_PLACES_API_KEY"),
   email: {
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT ? numberFromEnv("EMAIL_PORT") : undefined,

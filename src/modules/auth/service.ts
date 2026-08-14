@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import { env } from "../../config/env.ts";
 import { AppDataSource } from "../../database/data-source.ts";
 import { Business } from "../businesses/business.entity.ts";
+import { findMatchingBusiness } from "../google/places.ts";
 
 class ServiceError extends Error {
   statusCode: number;
@@ -69,6 +70,19 @@ export class AuthService {
       throw new ServiceError("Email is already registered.", 409);
     }
 
+    let googlePlaceId: string | null = null;
+
+    if (env.googlePlacesApiKey) {
+      const match = await findMatchingBusiness(businessName, address);
+      if (!match) {
+        throw new ServiceError(
+          "Business not found on Google Maps. Only businesses listed on Google Maps can register.",
+          422,
+        );
+      }
+      googlePlaceId = match.placeId;
+    }
+
     const salt = randomBytes(16).toString("hex");
     const passwordHash = this.hashPassword(password, salt);
 
@@ -81,6 +95,7 @@ export class AuthService {
       address,
       industryType,
       businessNumber,
+      googlePlaceId,
     });
 
     await this.businessRepository.save(business);

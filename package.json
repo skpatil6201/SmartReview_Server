@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/skpatil6201/SmartReview_Server#readme",
   "dependencies": {
-    "@types/express": "^5.0.6",
+    "@google/genai": "^2.16.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
@@ -34,9 +34,11 @@
     "typeorm": "^0.3.31"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.11.0",
     "@types/nodemailer": "^8.0.1",
+    "nodemon": "^3.1.14",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.4"
   }

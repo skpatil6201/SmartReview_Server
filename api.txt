@@ -13,6 +13,7 @@ Notes
   Content-Type: application/json
 - Auth routes are mounted at /api/auth. The same auth router is also included inside /api, so use the /api/auth paths below.
 - Several modules currently expose only a root health/info endpoint.
+- :businessId is the "id" of a registered business (returned by signup or GET /api/users).
 
 
 Root
@@ -66,7 +67,12 @@ Request JSON:
 
 Success Response:
 {
-  "token": "jwt-token"
+  "token": "jwt-token",
+  "user": {
+    "id": 1,
+    "email": "owner@example.com",
+    "isAdmin": false
+  }
 }
 
 GET /api/auth/user/:id
@@ -150,6 +156,50 @@ Response:
   "message": "reviews module root"
 }
 
+GET /api/reviews/:businessId
+Description: Get all reviews for a business (syncs from Google Maps when configured).
+Example:
+GET /api/reviews/1
+
+Success Response:
+[
+  {
+    "id": 1,
+    "businessId": 1,
+    "googleReviewId": "test-1",
+    "authorName": "Rahul",
+    "rating": 4,
+    "comment": "Great food!",
+    "reviewDate": "2026-08-13T10:24:06.363Z",
+    "reply": null,
+    "replyDate": null,
+    "createdAt": "2026-08-13T04:54:06.578Z",
+    "updatedAt": "2026-08-13T04:54:06.578Z"
+  }
+]
+
+POST /api/reviews/:reviewId/reply
+Description: Save the business's reply to a review.
+Request JSON:
+{
+  "reply": "Thank you for your feedback!"
+}
+
+Success Response:
+{
+  "id": 1,
+  "businessId": 1,
+  "googleReviewId": "test-1",
+  "authorName": "Rahul",
+  "rating": 4,
+  "comment": "Great food!",
+  "reviewDate": "2026-08-13T10:24:06.363Z",
+  "reply": "Thank you for your feedback!",
+  "replyDate": "2026-08-13T10:24:13.884Z",
+  "createdAt": "2026-08-13T04:54:06.578Z",
+  "updatedAt": "2026-08-13T04:54:14.367Z"
+}
+
 
 AI
 --
@@ -159,6 +209,27 @@ Description: AI module root check.
 Response:
 {
   "message": "ai module root"
+}
+
+POST /api/ai/generate-response
+Description: Generate a response to a customer review.
+Request JSON:
+{
+  "review": {
+    "comment": "The service was a bit slow, but the food was absolutely delicious. Worth the wait!",
+    "rating": 4
+  },
+  "business": {
+    "name": "Tejas Cafe",
+    "category": "Restaurant"
+  },
+  "tone": "professional",
+  "language": "English"
+}
+
+Success Response:
+{
+  "response": "Thank you for taking the time to leave us a review! We are delighted to hear that you found our food absolutely delicious and worth the wait. We also appreciate your constructive feedback regarding the slower service..."
 }
 
 

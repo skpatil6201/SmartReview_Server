@@ -1,10 +1,10 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { randomBytes, randomInt, scryptSync, timingSafeEqual } from "crypto";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { env } from "../../config/env.ts";
 import { AppDataSource } from "../../database/data-source.ts";
 import { Business } from "../businesses/business.entity.ts";
-import { findMatchingBusiness } from "../google/places.ts";
+import { findMatchingBusiness, fetchGoogleReviews } from "../google/places.ts";
 
 class ServiceError extends Error {
   statusCode: number;
@@ -21,27 +21,56 @@ export class AuthService {
     return scryptSync(password, salt, 64).toString("hex");
   }
 
-  private async sendWelcomeEmail(email: string, businessName: string) {
+  private createTransporter() {
     if (!env.email.host || !env.email.port || !env.email.user || !env.email.pass) {
-      console.warn("Email configuration is incomplete. Skipping welcome email.");
-      return;
+      return null;
     }
 
-    const transporter = nodemailer.createTransport({
+    return nodemailer.createTransport({
       host: env.email.host,
       port: env.email.port,
       secure: env.email.secure,
+      connectionTimeout: 8000,
+      socketTimeout: 8000,
       auth: {
         user: env.email.user,
         pass: env.email.pass,
       },
     });
+  }
+
+  private async sendWelcomeEmail(email: string, businessName: string) {
+    const transporter = this.createTransporter();
+    if (!transporter) {
+      console.warn("Email configuration is incomplete. Skipping welcome email.");
+      return;
+    }
 
     await transporter.sendMail({
-      from: `"ReviewManager" <${env.email.user}>`,
+      from: `"ReviewManager" <${env.email.user!}>`,
       to: email,
       subject: "Welcome to ReviewManager!",
       html: `<b>Hello ${businessName},</b><br><p>Thank you for registering with ReviewManager. We're excited to have you on board!</p>`,
+    });
+  }
+
+  private async sendOtpEmail(email: string, otp: string) {
+    const transporter = this.createTransporter();
+    if (!transporter) {
+      console.warn("Email configuration is incomplete. Skipping OTP email.");
+      return;
+    }
+
+    await transporter.sendMail({
+      from: `"ReviewManager" <${env.email.user!}>`,
+      to: email,
+      subject: "Your ReviewManager OTP",
+      html: `
+        <p>You requested a password reset for your ReviewManager account.</p>
+        <p>Your One-Time Password (OTP) is:</p>
+        <h2 style="letter-spacing: 4px;">${otp}</h2>
+        <p>This OTP is valid for 10 minutes. If you did not request this, please ignore this email.</p>
+      `,
     });
   }
 
@@ -80,6 +109,15 @@ export class AuthService {
           422,
         );
       }
+
+      const reviews = await fetchGoogleReviews(match.placeId);
+      if (!reviews.length) {
+        throw new ServiceError(
+          "This business has no Google reviews yet. Only businesses with at least one Google review can register.",
+          422,
+        );
+      }
+
       googlePlaceId = match.placeId;
     }
 
@@ -139,6 +177,85 @@ export class AuthService {
 
     // Return the token and some user info for the client to use
     return { token, user: { id: business.id, email: business.email, isAdmin: business.isAdmin } };
+  }
+
+  private generateOtp() {
+    return randomInt(100000, 1000000).toString();
+  }
+
+  async forgotPassword(email: string) {
+    if (!email) {
+      throw new ServiceError("Email is required.", 400);
+    }
+
+    const business = await this.businessRepository.findOneBy({ email });
+    if (!business) {
+      throw new ServiceError("No account found with this email.", 404);
+    }
+
+    const otp = this.generateOtp();
+    const otpSalt = randomBytes(16).toString("hex");
+    business.otp = this.hashPassword(otp, otpSalt) + "." + otpSalt;
+    business.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    business.otpVerified = false;
+    await this.businessRepository.save(business);
+
+    this.sendOtpEmail(business.email, otp).catch((error) => {
+      console.error("Failed to send OTP email:", error);
+    });
+
+    return { message: "OTP sent to your email." };
+  }
+
+  async verifyOtp(email: string, otp: string) {
+    if (!email || !otp) {
+      throw new ServiceError("Email and OTP are required.", 400);
+    }
+
+    const business = await this.businessRepository.findOneBy({ email });
+    if (!business || !business.otp || !business.otpExpires) {
+      throw new ServiceError("No OTP found. Please request a new one.", 400);
+    }
+
+    if (business.otpExpires.getTime() < Date.now()) {
+      throw new ServiceError("OTP has expired. Please request a new one.", 400);
+    }
+
+    const [storedHash, otpSalt] = business.otp.split(".");
+    const attemptedHash = this.hashPassword(otp, otpSalt!);
+    if (attemptedHash !== storedHash) {
+      throw new ServiceError("Invalid OTP.", 400);
+    }
+
+    business.otpVerified = true;
+    await this.businessRepository.save(business);
+
+    return { message: "OTP verified successfully. You can now reset your password." };
+  }
+
+  async resetPassword(email: string, password: string, confirmPassword: string) {
+    if (!email || !password || !confirmPassword) {
+      throw new ServiceError("Email and new password are required.", 400);
+    }
+
+    if (password !== confirmPassword) {
+      throw new ServiceError("Password and confirm password must match.", 400);
+    }
+
+    const business = await this.businessRepository.findOneBy({ email });
+    if (!business || !business.otpVerified) {
+      throw new ServiceError("Please verify your OTP first.", 400);
+    }
+
+    const salt = randomBytes(16).toString("hex");
+    business.passwordHash = this.hashPassword(password, salt);
+    business.passwordSalt = salt;
+    business.otp = null;
+    business.otpExpires = null;
+    business.otpVerified = false;
+    await this.businessRepository.save(business);
+
+    return { message: "Password reset successfully." };
   }
 }
 

@@ -75,6 +75,45 @@ Success Response:
   }
 }
 
+POST /api/auth/forgot-password
+Description: Send a 6-digit OTP to the email for password reset.
+Request JSON:
+{
+  "email": "owner@example.com"
+}
+
+Success Response:
+{
+  "message": "OTP sent to your email."
+}
+
+POST /api/auth/verify-otp
+Description: Verify the OTP received via email. Must be called before reset-password.
+Request JSON:
+{
+  "email": "owner@example.com",
+  "otp": "123456"
+}
+
+Success Response:
+{
+  "message": "OTP verified successfully. You can now reset your password."
+}
+
+POST /api/auth/reset-password
+Description: Set a new password. Requires prior OTP verification via /verify-otp.
+Request JSON:
+{
+  "email": "owner@example.com",
+  "password": "NewPassword123",
+  "confirmPassword": "NewPassword123"
+}
+
+Success Response:
+{
+  "message": "Password reset successfully."
+}
+
 GET /api/auth/user/:id
 Description: Get one registered business/user by numeric id.
 Example:

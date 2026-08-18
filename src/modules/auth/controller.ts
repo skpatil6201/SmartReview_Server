@@ -51,4 +51,36 @@ export const getAllUsers = async (_req: Request, res: Response) => {
   }
 };
 
-export default { root, signup, login, getUser };
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const result = await AuthService.forgotPassword(req.body.email);
+    return res.status(200).json(result);
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    return res.status(status).json({ message: err?.message || "Error sending OTP." });
+  }
+};
+
+export const verifyOtp = async (req: Request, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+    const result = await AuthService.verifyOtp(email, otp);
+    return res.status(200).json(result);
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    return res.status(status).json({ message: err?.message || "Error verifying OTP." });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
+    const result = await AuthService.resetPassword(email, password, confirmPassword);
+    return res.status(200).json(result);
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    return res.status(status).json({ message: err?.message || "Error resetting password." });
+  }
+};
+
+export default { root, signup, login, getUser, forgotPassword, verifyOtp, resetPassword };

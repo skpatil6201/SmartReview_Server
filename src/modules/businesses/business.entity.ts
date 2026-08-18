@@ -35,6 +35,15 @@ export class Business {
   @Column({ type: "int", nullable: true })
   subscriptionId!: number | null;
 
+  @Column({ type: "varchar", nullable: true })
+  otp!: string | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  otpExpires!: Date | null;
+
+  @Column({ type: "boolean", default: false })
+  otpVerified!: boolean;
+
   @CreateDateColumn()
   createdAt!: Date;
 

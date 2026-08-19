@@ -16,6 +16,40 @@ export const getReviews = async (req: Request, res: Response) => {
   }
 };
 
+export const createReview = async (req: Request, res: Response) => {
+  try {
+    const { businessId, authorName, rating, comment } = req.body;
+    const review = await ReviewsService.createReview({ businessId, authorName, rating, comment });
+    return res.status(201).json(review);
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    return res.status(status).json({ message: err?.message || "Error creating review." });
+  }
+};
+
+export const updateReview = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { rating, comment, reply } = req.body;
+    const updated = await ReviewsService.updateReview(Number(id), { rating, comment, reply });
+    return res.status(200).json(updated);
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    return res.status(status).json({ message: err?.message || "Error updating review." });
+  }
+};
+
+export const deleteReview = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const result = await ReviewsService.deleteReview(Number(id));
+    return res.status(200).json(result);
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    return res.status(status).json({ message: err?.message || "Error deleting review." });
+  }
+};
+
 export const replyToReview = async (req: Request, res: Response) => {
   try {
     const { reviewId } = req.params;
@@ -28,4 +62,4 @@ export const replyToReview = async (req: Request, res: Response) => {
   }
 };
 
-export default { root, getReviews, replyToReview };
+export default { root, getReviews, createReview, updateReview, deleteReview, replyToReview };

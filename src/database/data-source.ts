@@ -5,6 +5,7 @@ import { Product } from "../modules/products/product.entity.ts";
 import { Review } from "../modules/reviews/review.entity.ts";
 import { Subscription } from "../modules/subscriptions/subscription.entity.ts";
 import { SupportForm } from "../modules/support/support.entity.ts";
+import { Payment } from "../modules/payments/payment.entity.ts";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -16,7 +17,7 @@ export const AppDataSource = new DataSource({
   synchronize: true,
   logging: false,
   ssl: env.db.ssl ? { rejectUnauthorized: false } : false,
-  entities: [Business, Product, Review, Subscription, SupportForm],
+  entities: [Business, Product, Review, Subscription, SupportForm, Payment],
   migrations: ["src/database/migrations/*.ts"],
   subscribers: [],
 });

@@ -14,6 +14,10 @@ type AppEnv = {
   jwtSecret: string;
   geminiApiKey: string | undefined;
   googlePlacesApiKey: string | undefined;
+  razorpay: {
+    keyId: string | undefined;
+    keySecret: string | undefined;
+  };
   email: {
     host: string | undefined;
     port: number | undefined;
@@ -82,6 +86,10 @@ export const env: AppEnv = {
   jwtSecret: required("JWT_SECRET"),
   geminiApiKey: optionalFromEnv("GEMINI_API_KEY"),
   googlePlacesApiKey: optionalFromEnv("GOOGLE_PLACES_API_KEY"),
+  razorpay: {
+    keyId: optionalFromEnv("RAZORPAY_KEY_ID"),
+    keySecret: optionalFromEnv("RAZORPAY_KEY_SECRET"),
+  },
   email: {
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT ? numberFromEnv("EMAIL_PORT") : undefined,

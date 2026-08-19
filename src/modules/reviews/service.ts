@@ -66,6 +66,51 @@ export class ReviewsService {
     });
   }
 
+  async createReview(data: { businessId: number; authorName?: string; rating: number; comment: string }) {
+    const { businessId, authorName, rating, comment } = data;
+
+    const business = await this.businessRepository.findOneBy({ id: businessId });
+    if (!business) {
+      throw new ServiceError("Business not found.", 404);
+    }
+
+    const review = this.reviewRepository.create({
+      businessId,
+      authorName: authorName ?? null,
+      rating,
+      comment,
+      reviewDate: new Date(),
+    });
+
+    return this.reviewRepository.save(review);
+  }
+
+  async updateReview(reviewId: number, data: { rating?: number; comment?: string; reply?: string }) {
+    const review = await this.reviewRepository.findOneBy({ id: reviewId });
+    if (!review) {
+      throw new ServiceError("Review not found.", 404);
+    }
+
+    if (data.rating !== undefined) review.rating = data.rating;
+    if (data.comment !== undefined) review.comment = data.comment;
+    if (data.reply !== undefined) {
+      review.reply = data.reply.trim() || null;
+      review.replyDate = data.reply ? new Date() : null;
+    }
+
+    return this.reviewRepository.save(review);
+  }
+
+  async deleteReview(reviewId: number) {
+    const review = await this.reviewRepository.findOneBy({ id: reviewId });
+    if (!review) {
+      throw new ServiceError("Review not found.", 404);
+    }
+
+    await this.reviewRepository.remove(review);
+    return { message: "Review deleted successfully.", id: reviewId };
+  }
+
   async replyToReview(reviewId: number, reply: string) {
     if (!reply || !reply.trim()) {
       throw new ServiceError("Reply text is required.", 400);

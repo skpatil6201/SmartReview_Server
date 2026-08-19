@@ -42,6 +42,22 @@ export class SubscriptionsService {
     return this.subscriptionRepository.save(subscription);
   }
 
+  async update(id: number, data: any) {
+    const subscription = await this.subscriptionRepository.findOneBy({ id });
+    if (!subscription) {
+      throw new ServiceError("Subscription not found.", 404);
+    }
+
+    const { name, description, price, durationDays, isActive } = data;
+    if (name !== undefined) subscription.name = name.trim();
+    if (description !== undefined) subscription.description = description?.trim() ?? null;
+    if (price !== undefined) subscription.price = Number(price);
+    if (durationDays !== undefined) subscription.durationDays = durationDays ? Number(durationDays) : null;
+    if (isActive !== undefined) subscription.isActive = Boolean(isActive);
+
+    return this.subscriptionRepository.save(subscription);
+  }
+
   async remove(id: number) {
     const subscription = await this.subscriptionRepository.findOneBy({ id });
     if (!subscription) {

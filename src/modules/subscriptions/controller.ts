@@ -32,6 +32,16 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.put("/:id", async (req, res) => {
+  try {
+    const updated = await SubscriptionsService.update(Number(req.params.id), req.body);
+    res.status(200).json(updated);
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    res.status(status).json({ message: err?.message || "Error updating subscription." });
+  }
+});
+
 router.post("/select", async (req, res) => {
   try {
     const { businessId, subscriptionId } = req.body;

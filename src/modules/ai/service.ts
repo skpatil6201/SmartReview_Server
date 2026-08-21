@@ -18,15 +18,30 @@ interface GenerateReviewResponseDto {
   language: string;
 }
 
-// --- Code Quality Suggestions ---
-// 1. Initialize the client once and reuse it.
-// 2. The API key check is moved here, so it fails early if not configured.
-if (!env.geminiApiKey) {
-  throw new Error("GEMINI_API_KEY environment variable is not configured.");
-}
-
-const genAI = new GoogleGenAI({ apiKey: env.geminiApiKey });
 const MODEL = "gemini-3.5-flash";
+
+let genAI: GoogleGenAI | null = null;
+
+/**
+ * Built on first use rather than at import time. A missing GEMINI_API_KEY is a
+ * reason for this one endpoint to fail, not for the whole server to refuse to
+ * boot - auth, payments and reviews do not need it. `env.geminiApiKey` is
+ * optional by design, so throwing at module scope took the process down.
+ *
+ * The client is still created once and reused.
+ */
+const getClient = (): GoogleGenAI => {
+  if (!env.geminiApiKey) {
+    const err = new Error(
+      "AI replies are not configured on this server. Set GEMINI_API_KEY.",
+    );
+    (err as any).statusCode = 503;
+    throw err;
+  }
+
+  genAI ??= new GoogleGenAI({ apiKey: env.geminiApiKey });
+  return genAI;
+};
 
 const generateReviewResponse = async (
   dto: GenerateReviewResponseDto,
@@ -56,7 +71,7 @@ const generateReviewResponse = async (
   
   **Your Response:**`;
   
-  const result = await genAI.interactions.create({
+  const result = await getClient().interactions.create({
     model: MODEL,
     input: prompt,
   });

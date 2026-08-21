@@ -116,6 +116,12 @@ export class PaymentsService {
     return { message: "Payment verified successfully.", paymentId: payment.id, status: "paid" };
   }
 
+  async getAllPaymentList() {
+    return this.paymentRepository.find({
+      order: { createdAt: "DESC" },
+    });
+  }
+
   async getPaymentsByBusiness(businessId: number) {
     const business = await this.businessRepository.findOneBy({ id: businessId });
     if (!business) throw new ServiceError("Business not found.", 404);

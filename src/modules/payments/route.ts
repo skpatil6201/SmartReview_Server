@@ -5,6 +5,7 @@ const router = Router();
 
 router.post("/create-order", controller.createOrder);
 router.post("/verify", controller.verifyPayment);
+router.get("/list", controller.getAllPaymentList);
 router.get("/:businessId", controller.getPaymentsByBusiness);
 router.get("/payment/:id", controller.getPaymentById);
 

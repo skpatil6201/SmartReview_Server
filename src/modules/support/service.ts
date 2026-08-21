@@ -45,12 +45,68 @@ export class SupportService {
     });
   }
 
+  async getByEmail(email: string) {
+    return this.supportRepository.find({
+      where: { email },
+      order: { createdAt: "DESC" },
+    });
+  }
+
+  async getByBusinessId(businessId: number) {
+    return this.supportRepository.find({
+      where: { businessId },
+      order: { createdAt: "DESC" },
+    });
+  }
+
   async getById(id: number) {
     const supportForm = await this.supportRepository.findOneBy({ id });
     if (!supportForm) {
       throw new ServiceError("Support form not found.", 404);
     }
     return supportForm;
+  }
+
+  async reply(id: number, adminReply: string) {
+    if (!adminReply || !adminReply.trim()) {
+      throw new ServiceError("Reply message is required.", 400);
+    }
+
+    const supportForm = await this.supportRepository.findOneBy({ id });
+    if (!supportForm) {
+      throw new ServiceError("Support form not found.", 404);
+    }
+
+    supportForm.adminReply = adminReply.trim();
+    supportForm.adminReplyDate = new Date();
+    supportForm.status = "replied";
+
+    return this.supportRepository.save(supportForm);
+  }
+
+  async updateStatus(id: number, status: string) {
+    const validStatuses = ["open", "replied", "closed"];
+    if (!validStatuses.includes(status)) {
+      throw new ServiceError(`Invalid status. Must be one of: ${validStatuses.join(", ")}`, 400);
+    }
+
+    const supportForm = await this.supportRepository.findOneBy({ id });
+    if (!supportForm) {
+      throw new ServiceError("Support form not found.", 404);
+    }
+
+    supportForm.status = status;
+    return this.supportRepository.save(supportForm);
+  }
+
+  async delete(id: number) {
+    const supportForm = await this.supportRepository.findOneBy({ id });
+    if (!supportForm) {
+      throw new ServiceError("Support form not found.", 404);
+    }
+
+    await this.supportRepository.remove(supportForm);
+    return { message: "Support ticket deleted.", id };
   }
 }
 

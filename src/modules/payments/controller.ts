@@ -23,6 +23,16 @@ export const verifyPayment = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllPayments = async (_req: Request, res: Response) => {
+  try {
+    const payments = await PaymentsService.getAll();
+    return res.status(200).json(payments);
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    return res.status(status).json({ message: err?.message || "Error fetching payments." });
+  }
+};
+
 export const getPaymentsByBusiness = async (req: Request, res: Response) => {
   try {
     const { businessId } = req.params;
@@ -45,4 +55,4 @@ export const getPaymentById = async (req: Request, res: Response) => {
   }
 };
 
-export default { createOrder, verifyPayment, getPaymentsByBusiness, getPaymentById };
+export default { createOrder, verifyPayment, getAllPayments, getPaymentsByBusiness, getPaymentById };

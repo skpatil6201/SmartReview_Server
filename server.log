@@ -1,2 +1,65 @@
+
+> server@1.0.0 watch
+> nodemon
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): src/**/*[39m
+[33m[nodemon] watching extensions: ts[39m
+[32m[nodemon] starting `tsc && node dist/index.js`[39m
 Database connected successfully.
 Server is running on http://localhost:8000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `tsc && node dist/index.js`[39m
+Database connected successfully.
+Server is running on http://localhost:8000
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `tsc && node dist/index.js`[39m
+Database connected successfully.
+Server is running on http://localhost:8000
+Razorpay order creation failed: {
+  statusCode: 401,
+  error: { code: 'BAD_REQUEST_ERROR', description: 'Authentication failed' }
+}
+Razorpay order creation failed: {
+  statusCode: 401,
+  error: { description: 'Authentication failed', code: 'BAD_REQUEST_ERROR' }
+}
+Razorpay order creation failed: {
+  statusCode: 401,
+  error: { code: 'BAD_REQUEST_ERROR', description: 'Authentication failed' }
+}
+Razorpay order creation failed: {
+  statusCode: 401,
+  error: { code: 'BAD_REQUEST_ERROR', description: 'Authentication failed' }
+}
+Razorpay order creation failed: {
+  statusCode: 401,
+  error: { description: 'Authentication failed', code: 'BAD_REQUEST_ERROR' }
+}
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `tsc && node dist/index.js`[39m
+Database connected successfully.
+Server is running on http://localhost:8000
+Razorpay order creation failed: {
+  statusCode: 401,
+  error: { description: 'Authentication failed', code: 'BAD_REQUEST_ERROR' }
+}
+Razorpay order creation failed: {
+  statusCode: 401,
+  error: { code: 'BAD_REQUEST_ERROR', description: 'Authentication failed' }
+}
+Razorpay order creation failed: {
+  statusCode: 401,
+  error: { code: 'BAD_REQUEST_ERROR', description: 'Authentication failed' }
+}
+Razorpay order creation failed: {
+  statusCode: 401,
+  error: { description: 'Authentication failed', code: 'BAD_REQUEST_ERROR' }
+}
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `tsc && node dist/index.js`[39m
+Database connected successfully.
+Server is running on http://localhost:8000
+[32m[nodemon] clean exit - waiting for changes before restart[39m

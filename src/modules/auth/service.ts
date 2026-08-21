@@ -175,8 +175,22 @@ export class AuthService {
       expiresIn: "1h",
     });
 
-    // Return the token and some user info for the client to use
-    return { token, user: { id: business.id, email: business.email, isAdmin: business.isAdmin } };
+    // Return the token plus the profile fields the client caches as its session
+    // user. The JWT payload above stays minimal on purpose - these are only for
+    // display and for prefilling forms such as the Razorpay checkout.
+    return {
+      token,
+      user: {
+        id: business.id,
+        email: business.email,
+        isAdmin: business.isAdmin,
+        businessName: business.businessName,
+        phoneNumber: business.phoneNumber,
+        address: business.address,
+        industryType: business.industryType,
+        businessNumber: business.businessNumber,
+      },
+    };
   }
 
   private generateOtp() {

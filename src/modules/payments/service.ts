@@ -38,11 +38,33 @@ export class PaymentsService {
 
     const razorpay = this.getRazorpay();
 
-    const order = await razorpay.orders.create({
-      amount: Math.round(subscription.price * 100),
-      currency: "INR",
-      receipt: `biz_${businessId}_sub_${subscriptionId}_${Date.now()}`,
-    });
+    let order;
+    try {
+      order = await razorpay.orders.create({
+        amount: Math.round(subscription.price * 100),
+        currency: "INR",
+        receipt: `biz_${businessId}_sub_${subscriptionId}_${Date.now()}`,
+      });
+    } catch (err: any) {
+      // Razorpay puts the useful part in error.description; err.message is often
+      // empty. Surfacing it means the app shows the real reason instead of
+      // blaming the credentials for every possible gateway failure.
+      const statusCode = err?.statusCode;
+      const description = err?.error?.description ?? err?.description ?? err?.message;
+      console.error(`Razorpay order creation failed (${statusCode ?? "no status"}):`, description ?? err);
+
+      if (statusCode === 401) {
+        throw new ServiceError(
+          "Razorpay rejected the API credentials (401 Authentication failed). Check that RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are a matching pair from the same account and mode, then restart the server.",
+          502,
+        );
+      }
+
+      throw new ServiceError(
+        description ? `Payment gateway error: ${description}` : "Payment gateway error. Please try again.",
+        502,
+      );
+    }
 
     const payment = this.paymentRepository.create({
       businessId,

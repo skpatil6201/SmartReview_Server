@@ -110,6 +110,12 @@ export class PaymentsService {
     });
   }
 
+  async getAll() {
+    return this.paymentRepository.find({
+      order: { createdAt: "DESC" },
+    });
+  }
+
   async getPaymentById(id: number) {
     const payment = await this.paymentRepository.findOneBy({ id });
     if (!payment) throw new ServiceError("Payment not found.", 404);

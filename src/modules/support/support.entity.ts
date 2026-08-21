@@ -23,6 +23,12 @@ export class SupportForm {
   @Column({ type: "varchar", default: "open" })
   status!: string;
 
+  @Column({ type: "text", nullable: true })
+  adminReply!: string | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  adminReplyDate!: Date | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

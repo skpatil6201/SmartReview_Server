@@ -23,6 +23,19 @@ export class Business {
   @Column()
   address!: string;
 
+  // Nullable: every business predating the profile form has none of these.
+  @Column({ type: "varchar", nullable: true })
+  ownerName!: string | null;
+
+  @Column({ type: "varchar", nullable: true })
+  location!: string | null;
+
+  // Server-relative path to the uploaded profile photo, e.g.
+  // "/uploads/avatars/12-a1b2c3.jpg". Stored relative rather than absolute so
+  // the photo keeps resolving when the server's host or LAN IP changes.
+  @Column({ type: "varchar", nullable: true })
+  avatarUrl!: string | null;
+
   @Column()
   industryType!: string;
 

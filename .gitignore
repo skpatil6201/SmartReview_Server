@@ -19,3 +19,6 @@ yarn-error.log*
 
 # VS Code
 .vscode/
+
+# Uploaded profile photos
+uploads/

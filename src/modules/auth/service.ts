@@ -5,6 +5,7 @@ import { env } from "../../config/env.ts";
 import { AppDataSource } from "../../database/data-source.ts";
 import { Business } from "../businesses/business.entity.ts";
 import { findMatchingBusiness, fetchGoogleReviews } from "../google/places.ts";
+import { verifyGoogleIdToken } from "../google/oauth.ts";
 
 class ServiceError extends Error {
   statusCode: number;
@@ -78,25 +79,44 @@ export class AuthService {
     const {
       businessName,
       phoneNumber,
-      email,
       password,
       confirmPassword,
       address,
       industryType,
       businessNumber,
+      googleIdToken,
     } = payload;
 
-    if (!businessName || !phoneNumber || !email || !password || !confirmPassword || !address || !industryType || !businessNumber) {
+    // A Google signup proves the email, so the password fields become optional.
+    const googleIdentity = googleIdToken ? await verifyGoogleIdToken(googleIdToken) : null;
+    const email = (googleIdentity?.email ?? payload.email)?.trim().toLowerCase();
+
+    if (!businessName || !phoneNumber || !email || !address || !industryType || !businessNumber) {
       throw new ServiceError("All fields are required.", 400);
     }
 
-    if (password !== confirmPassword) {
-      throw new ServiceError("Password and confirm password must match.", 400);
+    if (!googleIdentity) {
+      if (!password || !confirmPassword) {
+        throw new ServiceError("All fields are required.", 400);
+      }
+
+      if (password !== confirmPassword) {
+        throw new ServiceError("Password and confirm password must match.", 400);
+      }
     }
 
     const existingBusiness = await this.businessRepository.findOneBy({ email });
     if (existingBusiness) {
       throw new ServiceError("Email is already registered.", 409);
+    }
+
+    if (googleIdentity) {
+      const existingGoogleAccount = await this.businessRepository.findOneBy({
+        googleUserId: googleIdentity.sub,
+      });
+      if (existingGoogleAccount) {
+        throw new ServiceError("This Google account is already linked to another business.", 409);
+      }
     }
 
     let googlePlaceId: string | null = null;
@@ -121,8 +141,8 @@ export class AuthService {
       googlePlaceId = match.placeId;
     }
 
-    const salt = randomBytes(16).toString("hex");
-    const passwordHash = this.hashPassword(password, salt);
+    const salt = password ? randomBytes(16).toString("hex") : null;
+    const passwordHash = password && salt ? this.hashPassword(password, salt) : null;
 
     const business = this.businessRepository.create({
       businessName,
@@ -134,6 +154,10 @@ export class AuthService {
       industryType,
       businessNumber,
       googlePlaceId,
+      googleUserId: googleIdentity?.sub ?? null,
+      googleEmail: googleIdentity?.email ?? null,
+      googleDisplayName: googleIdentity?.name ?? null,
+      googlePhotoUrl: googleIdentity?.picture ?? null,
     });
 
     await this.businessRepository.save(business);
@@ -158,6 +182,13 @@ export class AuthService {
       throw new ServiceError("Invalid credentials.", 401);
     }
 
+    if (!business.passwordHash || !business.passwordSalt) {
+      throw new ServiceError(
+        "This account was created with Google. Use \"Continue with Google\" to sign in.",
+        409,
+      );
+    }
+
     const attemptedHash = this.hashPassword(password, business.passwordSalt);
     const storedHashBuffer = Buffer.from(business.passwordHash, "hex");
     const attemptedHashBuffer = Buffer.from(attemptedHash, "hex");
@@ -177,6 +208,68 @@ export class AuthService {
 
     // Return the token and some user info for the client to use
     return { token, user: { id: business.id, email: business.email, isAdmin: business.isAdmin } };
+  }
+
+  /**
+   * Sign-In with Google from the mobile app.
+   *
+   * Known Google account or matching email -> straight to a session.
+   * Otherwise we hand the profile back so the app can open the signup form
+   * pre-filled; the business details we still need are not in the ID token.
+   */
+  async googleSignIn(idToken: string) {
+    const identity = await verifyGoogleIdToken(idToken);
+
+    if (!identity.emailVerified) {
+      throw new ServiceError("This Google account has no verified email address.", 403);
+    }
+
+    let business = await this.businessRepository.findOneBy({ googleUserId: identity.sub });
+
+    if (!business) {
+      // Same person signing in with Google for the first time on an account
+      // they originally created with a password - link the two.
+      business = await this.businessRepository.findOneBy({ email: identity.email });
+
+      if (business) {
+        business.googleUserId = identity.sub;
+        business.googleEmail = identity.email;
+        business.googleDisplayName = identity.name;
+        business.googlePhotoUrl = identity.picture;
+        await this.businessRepository.save(business);
+      }
+    }
+
+    if (!business) {
+      return {
+        isNewUser: true,
+        googleProfile: {
+          email: identity.email,
+          name: identity.name,
+          picture: identity.picture,
+          googleUserId: identity.sub,
+        },
+        message: "Finish setting up your business to continue.",
+      };
+    }
+
+    const token = jwt.sign(
+      { id: business.id, email: business.email, isAdmin: business.isAdmin },
+      env.jwtSecret,
+      { expiresIn: "7d" },
+    );
+
+    return {
+      isNewUser: false,
+      token,
+      user: {
+        id: business.id,
+        email: business.email,
+        businessName: business.businessName,
+        isAdmin: business.isAdmin,
+        googleConnectionStatus: business.googleConnectionStatus,
+      },
+    };
   }
 
   private generateOtp() {

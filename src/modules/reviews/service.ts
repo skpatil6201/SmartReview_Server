@@ -2,6 +2,7 @@ import { AppDataSource } from "../../database/data-source.ts";
 import { Business } from "../businesses/business.entity.ts";
 import { Review } from "./review.entity.ts";
 import { fetchGoogleReviews } from "../google/places.ts";
+import GoogleService from "../google/service.ts";
 import { env } from "../../config/env.ts";
 
 class ServiceError extends Error {
@@ -17,6 +18,17 @@ export class ReviewsService {
   private businessRepository = AppDataSource.getRepository(Business);
 
   private async syncGoogleReviews(business: Business): Promise<void> {
+    // A connected Business Profile is the better source: every review, plus
+    // replies. Places API only ever returns five public ones.
+    if (business.googleConnectionStatus === "connected" && business.googleLocationName) {
+      try {
+        await GoogleService.syncReviews(business.id);
+        return;
+      } catch (error) {
+        console.error("Business Profile sync failed, falling back to Places:", error);
+      }
+    }
+
     if (!business.googlePlaceId || !env.googlePlacesApiKey) {
       return;
     }
@@ -33,6 +45,7 @@ export class ReviewsService {
       const reviewData = {
         businessId: business.id,
         googleReviewId: gr.id,
+        platform: "google",
         authorName: gr.authorAttribution?.displayName ?? null,
         rating: gr.rating ?? 0,
         comment: gr.text?.text ?? "",
@@ -119,6 +132,12 @@ export class ReviewsService {
     const review = await this.reviewRepository.findOneBy({ id: reviewId });
     if (!review) {
       throw new ServiceError("Review not found.", 404);
+    }
+
+    // Reviews that came from a connected Business Profile publish back to
+    // Google, so the reply is visible on Maps and not just inside the app.
+    if (review.googleReviewName) {
+      return GoogleService.replyToReview(review.businessId, review.id, reply);
     }
 
     review.reply = reply.trim();

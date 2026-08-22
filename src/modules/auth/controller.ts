@@ -27,6 +27,22 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * POST /api/auth/google - body { idToken } from the native Google Sign-In SDK.
+ * Returns either a session, or { isNewUser: true, googleProfile } so the app
+ * can open the signup form pre-filled.
+ */
+export const googleSignIn = async (req: Request, res: Response) => {
+  try {
+    const { idToken } = req.body ?? {};
+    const result = await AuthService.googleSignIn(idToken);
+    return res.status(200).json(result);
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    return res.status(status).json({ message: err?.message || "Google sign-in failed." });
+  }
+};
+
 export const getUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -83,4 +99,13 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
-export default { root, signup, login, getUser, forgotPassword, verifyOtp, resetPassword };
+export default {
+  root,
+  signup,
+  login,
+  googleSignIn,
+  getUser,
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
+};

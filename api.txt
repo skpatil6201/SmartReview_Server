@@ -303,3 +303,165 @@ Response:
 {
   "message": "notifications module root"
 }
+
+
+Google Sign-In (auth)
+---------------------
+
+POST /api/auth/google
+Description: Exchange a Google ID token from the mobile SDK for an app session.
+Request JSON:
+{
+  "idToken": "<ID token from @react-native-google-signin/google-signin>"
+}
+
+Response (existing account):
+{
+  "isNewUser": false,
+  "token": "<jwt>",
+  "user": { "id": 1, "email": "owner@example.com", "businessName": "Tejas Cafe",
+            "isAdmin": false, "googleConnectionStatus": "connected" }
+}
+
+Response (first time - no business row yet):
+{
+  "isNewUser": true,
+  "googleProfile": { "email": "owner@example.com", "name": "Tejas",
+                     "picture": "https://...", "googleUserId": "1084..." },
+  "message": "Finish setting up your business to continue."
+}
+
+POST /api/auth/signup  (extended)
+Description: The password fields become optional when "googleIdToken" is sent -
+             the token proves the email, so the account is created without a
+             password and can only be signed into with Google afterwards.
+Request JSON (Google variant):
+{
+  "businessName": "Tejas Cafe",
+  "phoneNumber": "9876543210",
+  "address": "Pune, Maharashtra",
+  "industryType": "Restaurant",
+  "businessNumber": "GSTIN123456",
+  "googleIdToken": "<ID token>"
+}
+
+
+Google Business Profile
+-----------------------
+
+All routes below require:  Authorization: Bearer <jwt>
+(the only exception is the OAuth callback, which a browser hits directly)
+
+GET /api/google/oauth/url
+Description: Consent URL to open in the system browser. Marks the business
+             "pending" until Google redirects back.
+Response:
+{
+  "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth?...",
+  "state": "<signed jwt, 15 min>"
+}
+
+GET /api/google/oauth/callback?code=...&state=...
+Description: Google redirects the owner's browser here. Exchanges the code for
+             tokens and, when the account manages exactly one location,
+             connects it automatically. Responds with an HTML page, not JSON.
+
+GET /api/google/status
+Response:
+{
+  "connectionStatus": "connected",
+  "isConnected": true,
+  "googleEmail": "owner@example.com",
+  "accountName": "accounts/1234567890",
+  "locationName": "locations/987654321",
+  "locationTitle": "Tejas Cafe - FC Road",
+  "connectedAt": "2026-08-21T09:10:00.000Z",
+  "reviewsSyncedAt": "2026-08-21T09:10:04.000Z",
+  "error": null,
+  "needsLocationSelection": false
+}
+connectionStatus is one of:
+  not_started | pending | needs_location | connected | failed | rejected
+
+GET /api/google/locations
+Description: Every account/location the connected Google user manages, for the
+             picker shown when there is more than one.
+Response:
+{
+  "selectedAccountName": "accounts/1234567890",
+  "selectedLocationName": "locations/987654321",
+  "accounts": [
+    {
+      "account": { "name": "accounts/1234567890", "accountName": "Tejas Cafe",
+                   "type": "LOCATION_GROUP", "verificationState": "VERIFIED" },
+      "locations": [
+        { "name": "locations/987654321", "title": "Tejas Cafe - FC Road",
+          "address": "FC Road, Pune, 411004", "phone": "+91 98765 43210",
+          "mapsUri": "https://maps.google.com/...", "placeId": "ChIJ..." }
+      ]
+    }
+  ]
+}
+
+POST /api/google/locations/select
+Request JSON:
+{ "accountName": "accounts/1234567890", "locationName": "locations/987654321" }
+Response: the same object as GET /api/google/status
+
+GET /api/google/reviews?refresh=true
+Description: Every stored Google review, newest first. Without "refresh" the
+             server only re-pulls from Google when the cache is over 5 minutes
+             old, so opening the tab repeatedly does not burn the daily quota.
+Response:
+{
+  "reviews": [
+    {
+      "id": 12,
+      "businessId": 1,
+      "googleReviewId": "AbFvOq...",
+      "googleReviewName": "accounts/123/locations/456/reviews/AbFvOq...",
+      "platform": "google",
+      "authorName": "Priya S.",
+      "authorPhotoUrl": "https://lh3.googleusercontent.com/...",
+      "rating": 5,
+      "comment": "Great coffee and quick service.",
+      "reviewDate": "2026-08-19T12:04:00.000Z",
+      "reply": null,
+      "replyDate": null,
+      "replySyncedToGoogle": false
+    }
+  ],
+  "total": 137,
+  "averageRating": 4.42,
+  "unrepliedCount": 18,
+  "syncedAt": "2026-08-21T09:10:04.000Z",
+  "locationTitle": "Tejas Cafe - FC Road",
+  "isConnected": true
+}
+
+POST /api/google/reviews/sync
+Description: Force a full pull from Google (follows pagination to the end).
+Response:
+{ "synced": 137, "created": 4, "updated": 133, "averageRating": 4.4,
+  "totalReviewCount": 137, "syncedAt": "2026-08-21T09:10:04.000Z" }
+
+POST /api/google/reviews/:reviewId/reply
+Description: Publishes the reply to Google Maps, then mirrors it locally.
+             :reviewId is the local numeric row id, not Google's review id.
+Request JSON: { "reply": "Thanks Priya, see you soon!" }
+Response: the updated review row
+
+DELETE /api/google/reviews/:reviewId/reply
+Description: Removes the reply from Google and clears it locally.
+
+DELETE /api/google/connection
+Description: Revokes the refresh token at Google and clears every stored Google
+             field. Reviews already imported are kept.
+Response: { "message": "Google Business Profile disconnected." }
+
+
+Reviews (auth now required)
+---------------------------
+GET/POST/PUT/DELETE on /api/reviews/* now require
+Authorization: Bearer <jwt>, because reading a business's reviews refreshes
+them from its Google Business Profile and a reply is published to Google Maps.
